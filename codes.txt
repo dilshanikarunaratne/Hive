@@ -1,0 +1,61 @@
+
+HIVE
+
+docker exec -it hadoop-pig-hive bash
+
+hdfs dfs -mkdir football
+hdfs dfs -put /resource/results.csv football
+hdfs dfs -ls football
+
+create database football;
+show databases;
+use football;
+
+ CREATE EXTERNAL TABLE IF NOT EXISTS football(
+    date_played STRING, home_team STRING, away_team STRING, home_score INT, away_score INT, tournament STRING, city STRING, country STRING, neutral STRING)
+    COMMENT 'Football Match Data'
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY ','
+    STORED AS TEXTFILE
+    LOCATION '/user/root/football'
+	
+	
+CREATE EXTERNAL TABLE IF NOT EXISTS score(
+date_played STRING, home_team STRING, away_team STRING, home_score INT, away_score INT, tournament STRING, city STRING, country STRING, neutral STRING)
+COMMENT ‘Football Match Data’
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/root/football_data'
+TBLPROPERTIES("skip.header.line.count”=“1”);
+
+
+SELECT sum(home_score), home_team FROM football GROUP BY home_team;
+
+
+select round(avg(away_score),3) as avg_score, away_team from football group by away_team order by avg_score desc limit 10;
+
+SELECT team, SUM(Loss) as Lost
+FROM
+( SELECT home_team as team, 
+     CASE WHEN home_score < away_score THEN 1 ELSE 0 END as Loss
+  FROM football
+  UNION ALL
+  SELECT away_team as team,
+     CASE WHEN away_score < home_score THEN 1 ELSE 0 END as Loss
+  FROM football
+) t
+GROUP BY team
+ORDER By Lost DESC
+LIMIT 5;
+
+
+
+
+
+
+
+
+
+
+
+
